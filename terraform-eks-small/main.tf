@@ -2,13 +2,28 @@ provider "aws" {
   region = local.region
 }
 
+provider "helm" {
+  kubernetes {
+    host                   = aws_eks_cluster.this.endpoint
+    cluster_ca_certificate = base64decode(aws_eks_cluster.this.certificate_authority[0].data)
+
+    exec {
+      api_version = "client.authentication.k8s.io/v1beta1"
+      command     = "aws"
+      args        = ["eks", "get-token", "--cluster-name", aws_eks_cluster.this.name, "--region", local.region]
+    }
+  }
+}
+
+data "aws_partition" "current" {}
+
 data "aws_availability_zones" "available" {
   state = "available"
 }
 
 locals {
   region               = "eu-west-2"
-  cluster_name         = "my-cluster"
+  cluster_name         = "noa-deleteme"
   cluster_version      = "1.35"
   vpc_cidr             = "10.0.0.0/16"
   public_subnet_cidrs  = ["10.0.0.0/20", "10.0.16.0/20"]
@@ -247,4 +262,85 @@ resource "aws_eks_node_group" "default" {
   ]
 
   tags = local.common_tags
+}
+
+data "tls_certificate" "eks_oidc" {
+  url = aws_eks_cluster.this.identity[0].oidc[0].issuer
+}
+
+resource "aws_iam_openid_connect_provider" "eks" {
+  client_id_list  = ["sts.amazonaws.com"]
+  thumbprint_list = [data.tls_certificate.eks_oidc.certificates[0].sha1_fingerprint]
+  url             = aws_eks_cluster.this.identity[0].oidc[0].issuer
+
+  tags = local.common_tags
+}
+
+resource "aws_iam_role" "ebs_csi_driver" {
+  name = "${local.cluster_name}-ebs-csi-driver"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Federated = aws_iam_openid_connect_provider.eks.arn
+        }
+        Action = "sts:AssumeRoleWithWebIdentity"
+        Condition = {
+          StringEquals = {
+            "${replace(aws_iam_openid_connect_provider.eks.url, "https://", "")}:sub" = "system:serviceaccount:kube-system:ebs-csi-controller-sa"
+            "${replace(aws_iam_openid_connect_provider.eks.url, "https://", "")}:aud" = "sts.amazonaws.com"
+          }
+        }
+      }
+    ]
+  })
+
+  tags = local.common_tags
+}
+
+resource "aws_iam_role_policy_attachment" "ebs_csi_driver" {
+  role       = aws_iam_role.ebs_csi_driver.name
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
+}
+
+resource "aws_eks_addon" "ebs_csi_driver" {
+  cluster_name             = aws_eks_cluster.this.name
+  addon_name               = "aws-ebs-csi-driver"
+  service_account_role_arn = aws_iam_role.ebs_csi_driver.arn
+
+  tags = local.common_tags
+
+  depends_on = [aws_eks_node_group.default]
+}
+
+resource "helm_release" "argocd" {
+  name             = "argocd"
+  namespace        = "argo"
+  create_namespace = true
+  repository       = "https://argoproj.github.io/argo-helm"
+  chart            = "argo-cd"
+  version          = "9.4.17"
+
+  values = [file("${path.module}/argocd-values.yaml")]
+
+  depends_on = [aws_eks_node_group.default]
+}
+
+resource "terraform_data" "argocd_app" {
+  triggers_replace = sha256(templatefile("${path.module}/argo-app.yaml", { cluster_name = local.cluster_name }))
+
+  provisioner "local-exec" {
+    interpreter = ["bash", "-c"]
+    command     = <<-EOT
+      aws eks update-kubeconfig --region ${local.region} --name ${local.cluster_name}
+      kubectl apply -f - <<'MANIFEST'
+      ${templatefile("${path.module}/argo-app.yaml", { cluster_name = local.cluster_name })}
+      MANIFEST
+    EOT
+  }
+
+  depends_on = [helm_release.argocd]
 }

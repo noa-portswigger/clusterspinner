@@ -10,8 +10,8 @@ locals {
   region           = "eu-west-2"
   role_name        = "terraform-eks-small-runner"
   policy_name      = "terraform-eks-small-runner-policy"
-  eks_cluster_name = "my-cluster"
-  tf_state_bucket  = "noa-tf-state-658786808637-eu-west-2-an"
+  eks_cluster_names = ["noa-deleteme", "my-cluster", "noa-delete-me"]
+  tf_state_bucket   = "noa-tf-state-658786808637-eu-west-2-an"
   tf_state_keys = [
     "terraform-eks-small/terraform.tfstate",
     "role-with-tf-permissions/terraform.tfstate",
@@ -25,18 +25,34 @@ locals {
     "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonEKSWorkerNodePolicy",
     "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonEKS_CNI_Policy",
     "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly",
+    "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy",
   ]
 
-  cluster_role_arn      = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/${local.eks_cluster_name}-cluster-role"
-  node_role_arn         = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/${local.eks_cluster_name}-node-role"
+  cluster_role_arns     = [for name in local.eks_cluster_names : "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/${name}-cluster-role"]
+  node_role_arns        = [for name in local.eks_cluster_names : "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/${name}-node-role"]
+  ebs_csi_role_arns     = [for name in local.eks_cluster_names : "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/${name}-ebs-csi-driver"]
   eks_nodegroup_slr_arn = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/aws-service-role/eks-nodegroup.amazonaws.com/AWSServiceRoleForAmazonEKSNodegroup"
-  cluster_arn           = "arn:${data.aws_partition.current.partition}:eks:${local.region}:${data.aws_caller_identity.current.account_id}:cluster/${local.eks_cluster_name}"
-  nodegroup_arn         = "arn:${data.aws_partition.current.partition}:eks:${local.region}:${data.aws_caller_identity.current.account_id}:nodegroup/${local.eks_cluster_name}/*/*"
+  cluster_arns          = [for name in local.eks_cluster_names : "arn:${data.aws_partition.current.partition}:eks:${local.region}:${data.aws_caller_identity.current.account_id}:cluster/${name}"]
+  nodegroup_arns        = [for name in local.eks_cluster_names : "arn:${data.aws_partition.current.partition}:eks:${local.region}:${data.aws_caller_identity.current.account_id}:nodegroup/${name}/*/*"]
+  addon_arns            = [for name in local.eks_cluster_names : "arn:${data.aws_partition.current.partition}:eks:${local.region}:${data.aws_caller_identity.current.account_id}:addon/${name}/*/*"]
+  oidc_provider_arns    = ["arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:oidc-provider/*"]
   tf_state_bucket_arn   = "arn:${data.aws_partition.current.partition}:s3:::${local.tf_state_bucket}"
   tf_state_object_arns = [
     for key in local.tf_state_keys :
     "${local.tf_state_bucket_arn}/${key}"
   ]
+}
+
+resource "aws_s3_bucket" "tf_state" {
+  bucket = local.tf_state_bucket
+}
+
+resource "aws_s3_bucket_versioning" "tf_state" {
+  bucket = aws_s3_bucket.tf_state.id
+
+  versioning_configuration {
+    status = "Enabled"
+  }
 }
 
 resource "aws_iam_role" "this" {
@@ -67,8 +83,11 @@ resource "aws_iam_policy" "terraform_eks_small" {
         Sid    = "EksCreateAndList"
         Effect = "Allow"
         Action = [
+          "eks:CreateAddon",
           "eks:CreateCluster",
           "eks:CreateNodegroup",
+          "eks:DescribeAddonVersions",
+          "eks:ListAddons",
           "eks:ListClusters",
           "eks:ListUpdates",
           "eks:DescribeUpdate"
@@ -79,22 +98,22 @@ resource "aws_iam_policy" "terraform_eks_small" {
         Sid    = "EksManageNamedClusterAndNodegroup"
         Effect = "Allow"
         Action = [
+          "eks:DeleteAddon",
           "eks:DeleteCluster",
+          "eks:DescribeAddon",
           "eks:DescribeCluster",
           "eks:DeleteNodegroup",
           "eks:DescribeNodegroup",
           "eks:ListNodegroups",
           "eks:TagResource",
           "eks:UntagResource",
+          "eks:UpdateAddon",
           "eks:UpdateClusterConfig",
           "eks:UpdateClusterVersion",
           "eks:UpdateNodegroupConfig",
           "eks:UpdateNodegroupVersion"
         ]
-        Resource = [
-          local.cluster_arn,
-          local.nodegroup_arn
-        ]
+        Resource = concat(local.cluster_arns, local.nodegroup_arns, local.addon_arns)
       },
       {
         Sid    = "Ec2NetworkLifecycle"
@@ -127,6 +146,7 @@ resource "aws_iam_policy" "terraform_eks_small" {
           "ec2:ReleaseAddress",
           "ec2:ReplaceRoute",
           "ec2:ReplaceRouteTableAssociation",
+          "ec2:DisassociateAddress",
           "ec2:RevokeSecurityGroupEgress"
         ]
         Resource = "*"
@@ -166,11 +186,7 @@ resource "aws_iam_policy" "terraform_eks_small" {
           "iam:UntagRole",
           "iam:UpdateAssumeRolePolicy"
         ]
-        Resource = [
-          local.cluster_role_arn,
-          local.node_role_arn,
-          local.eks_nodegroup_slr_arn
-        ]
+        Resource = concat(local.cluster_role_arns, local.node_role_arns, local.ebs_csi_role_arns, [local.eks_nodegroup_slr_arn])
       },
       {
         Sid    = "IamManagedPolicyReadAndPassRole"
@@ -181,10 +197,7 @@ resource "aws_iam_policy" "terraform_eks_small" {
           "iam:ListPolicyVersions",
           "iam:PassRole"
         ]
-        Resource = concat(local.managed_policy_arns, [
-          local.cluster_role_arn,
-          local.node_role_arn
-        ])
+        Resource = concat(local.managed_policy_arns, local.cluster_role_arns, local.node_role_arns, local.ebs_csi_role_arns)
       },
       {
         Sid    = "IamCreateEksServiceLinkedRole"
@@ -201,6 +214,24 @@ resource "aws_iam_policy" "terraform_eks_small" {
             ]
           }
         }
+      },
+      {
+        Sid    = "IamOidcProviderCreate"
+        Effect = "Allow"
+        Action = [
+          "iam:CreateOpenIDConnectProvider"
+        ]
+        Resource = "*"
+      },
+      {
+        Sid    = "IamOidcProviderManage"
+        Effect = "Allow"
+        Action = [
+          "iam:DeleteOpenIDConnectProvider",
+          "iam:GetOpenIDConnectProvider",
+          "iam:TagOpenIDConnectProvider"
+        ]
+        Resource = local.oidc_provider_arns
       },
       {
         Sid    = "S3ListTerraformStateBucket"

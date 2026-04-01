@@ -1,0 +1,21 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: ${cluster_name}
+  namespace: argo
+spec:
+  destination:
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    directory:
+      jsonnet: {}
+      recurse: true
+    path: .
+    repoURL: https://github.com/noa-portswigger/${cluster_name}-manifests
+    targetRevision: HEAD
+  syncPolicy:
+    automated:
+      enabled: true
+    syncOptions:
+    - ServerSideApply=true
