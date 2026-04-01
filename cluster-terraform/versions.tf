@@ -3,7 +3,7 @@ terraform {
 
   backend "s3" {
     bucket = "noa-tf-state-658786808637-eu-west-2-an"
-    key    = "terraform-eks-small/terraform.tfstate"
+    key    = "cluster-terraform/terraform.tfstate"
     region = "eu-west-2"
   }
 

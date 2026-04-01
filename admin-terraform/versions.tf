@@ -3,7 +3,7 @@ terraform {
 
   backend "s3" {
     bucket = "noa-tf-state-658786808637-eu-west-2-an"
-    key    = "role-with-tf-permissions/terraform.tfstate"
+    key    = "admin-terraform/terraform.tfstate"
     region = "eu-west-2"
   }
 

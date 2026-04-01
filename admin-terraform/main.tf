@@ -13,8 +13,8 @@ locals {
   eks_cluster_names = ["noa-deleteme", "my-cluster", "noa-delete-me"]
   tf_state_bucket   = "noa-tf-state-658786808637-eu-west-2-an"
   tf_state_keys = [
-    "terraform-eks-small/terraform.tfstate",
-    "role-with-tf-permissions/terraform.tfstate",
+    "cluster-terraform/terraform.tfstate",
+    "admin-terraform/terraform.tfstate",
   ]
   trusted_principals = [
     "arn:aws:iam::658786808637:role/pipeline-roles/teleport-administrator-role"
