@@ -1,0 +1,8 @@
+clusterName: teleport.noa-deleteme.swigger.io
+service:
+  type: NodePort
+highAvailability:
+  requireAntiAffinity: true
+persistence:
+  storageClassName: gp2
+

@@ -1,0 +1,4 @@
+[git]
+repo = "alpine/git"
+version = "v2.52.0"
+

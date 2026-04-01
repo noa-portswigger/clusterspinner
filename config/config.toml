@@ -1,0 +1,6 @@
+[[helm]]
+namespace = "teleport-cluster"
+release = "teleport-cluster"
+values = ["teleport/cluster-values.yaml"]
+#extra-resources = "teleport/extra"
+

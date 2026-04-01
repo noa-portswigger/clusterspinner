@@ -1,0 +1,8 @@
+repositories:
+  - name: teleport
+    url: https://charts.releases.teleport.dev
+  
+releases:
+  - name: teleport-cluster
+    chart: teleport/teleport-cluster
+    version: 18.7.3
