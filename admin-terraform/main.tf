@@ -234,6 +234,20 @@ resource "aws_iam_policy" "terraform_eks_small" {
         Resource = local.oidc_provider_arns
       },
       {
+        Sid    = "Route53ManagePlaygroundZone"
+        Effect = "Allow"
+        Action = [
+          "route53:CreateHostedZone",
+          "route53:DeleteHostedZone",
+          "route53:GetHostedZone",
+          "route53:ListTagsForResource",
+          "route53:ChangeTagsForResource",
+          "route53:ChangeResourceRecordSets",
+          "route53:ListResourceRecordSets"
+        ]
+        Resource = "*"
+      },
+      {
         Sid    = "S3ListTerraformStateBucket"
         Effect = "Allow"
         Action = [
@@ -264,4 +278,8 @@ resource "aws_iam_policy" "terraform_eks_small" {
 resource "aws_iam_role_policy_attachment" "attach" {
   role       = aws_iam_role.this.name
   policy_arn = aws_iam_policy.terraform_eks_small.arn
+}
+
+resource "aws_route53_zone" "playground" {
+  name = "playground.swigger.io"
 }
