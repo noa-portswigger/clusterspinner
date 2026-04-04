@@ -13,3 +13,15 @@ resource "aws_s3_bucket_versioning" "tf_state" {
     status = "Enabled"
   }
 }
+
+resource "aws_ssm_parameter" "region" {
+  name  = "/${var.ssm_prefix}/region"
+  type  = "String"
+  value = var.region
+}
+
+resource "aws_ssm_parameter" "tf_bucket_name" {
+  name  = "/${var.ssm_prefix}/tf_bucket_name"
+  type  = "String"
+  value = var.bucket_name
+}

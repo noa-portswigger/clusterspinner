@@ -1,11 +1,7 @@
-variable "region" {
-  description = "AWS region."
+variable "ssm_prefix" {
+  description = "SSM parameter path prefix to read region and tf_bucket_name from."
   type        = string
-}
-
-variable "tf_state_bucket" {
-  description = "Name of the S3 bucket used for Terraform state."
-  type        = string
+  default     = "clusterspinner"
 }
 
 variable "cluster_names" {

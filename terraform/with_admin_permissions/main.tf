@@ -1,5 +1,13 @@
+data "aws_ssm_parameter" "region" {
+  name = "/${var.ssm_prefix}/region"
+}
+
+data "aws_ssm_parameter" "tf_bucket_name" {
+  name = "/${var.ssm_prefix}/tf_bucket_name"
+}
+
 provider "aws" {
-  region = var.region
+  region = data.aws_ssm_parameter.region.value
 }
 
 data "aws_caller_identity" "current" {}
@@ -7,8 +15,10 @@ data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
 
 locals {
-  role_name   = "clusterspinner-runner"
-  policy_name = "clusterspinner-runner-policy"
+  role_name       = "clusterspinner"
+  policy_name     = "clusterspinner-policy"
+  region          = data.aws_ssm_parameter.region.value
+  tf_state_bucket = data.aws_ssm_parameter.tf_bucket_name.value
 
   tf_state_keys = [
     "setup-cluster/terraform.tfstate",
@@ -29,11 +39,11 @@ locals {
   irsa_role_arns        = [for name in var.cluster_names : "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/${name}/*"]
   irsa_policy_arns      = [for name in var.cluster_names : "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:policy/${name}/*"]
   eks_nodegroup_slr_arn = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/aws-service-role/eks-nodegroup.amazonaws.com/AWSServiceRoleForAmazonEKSNodegroup"
-  cluster_arns          = [for name in var.cluster_names : "arn:${data.aws_partition.current.partition}:eks:${var.region}:${data.aws_caller_identity.current.account_id}:cluster/${name}"]
-  nodegroup_arns        = [for name in var.cluster_names : "arn:${data.aws_partition.current.partition}:eks:${var.region}:${data.aws_caller_identity.current.account_id}:nodegroup/${name}/*/*"]
-  addon_arns            = [for name in var.cluster_names : "arn:${data.aws_partition.current.partition}:eks:${var.region}:${data.aws_caller_identity.current.account_id}:addon/${name}/*/*"]
+  cluster_arns          = [for name in var.cluster_names : "arn:${data.aws_partition.current.partition}:eks:${local.region}:${data.aws_caller_identity.current.account_id}:cluster/${name}"]
+  nodegroup_arns        = [for name in var.cluster_names : "arn:${data.aws_partition.current.partition}:eks:${local.region}:${data.aws_caller_identity.current.account_id}:nodegroup/${name}/*/*"]
+  addon_arns            = [for name in var.cluster_names : "arn:${data.aws_partition.current.partition}:eks:${local.region}:${data.aws_caller_identity.current.account_id}:addon/${name}/*/*"]
   oidc_provider_arns    = ["arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:oidc-provider/*"]
-  tf_state_bucket_arn   = "arn:${data.aws_partition.current.partition}:s3:::${var.tf_state_bucket}"
+  tf_state_bucket_arn   = "arn:${data.aws_partition.current.partition}:s3:::${local.tf_state_bucket}"
   tf_state_object_arns = [
     for key in local.tf_state_keys :
     "${local.tf_state_bucket_arn}/${key}"
