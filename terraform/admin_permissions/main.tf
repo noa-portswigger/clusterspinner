@@ -1,5 +1,5 @@
 provider "aws" {
-  region = local.region
+  region = var.region
 }
 
 data "aws_caller_identity" "current" {}
@@ -7,17 +7,12 @@ data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
 
 locals {
-  region           = "eu-west-2"
-  role_name        = "terraform-eks-small-runner"
-  policy_name      = "terraform-eks-small-runner-policy"
-  eks_cluster_names = ["noa-deleteme", "my-cluster"]
-  tf_state_bucket   = "noa-tf-state-658786808637-eu-west-2-an"
+  role_name   = "clusterspinner-runner"
+  policy_name = "clusterspinner-runner-policy"
+
   tf_state_keys = [
     "cluster-terraform/terraform.tfstate",
-    "admin-terraform/terraform.tfstate",
-  ]
-  trusted_principals = [
-    "arn:aws:iam::658786808637:role/pipeline-roles/teleport-administrator-role"
+    "admin-permissions/terraform.tfstate",
   ]
 
   managed_policy_arns = [
@@ -28,33 +23,21 @@ locals {
     "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy",
   ]
 
-  cluster_role_arns     = [for name in local.eks_cluster_names : "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/${name}-cluster-role"]
-  node_role_arns        = [for name in local.eks_cluster_names : "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/${name}-node-role"]
-  ebs_csi_role_arns     = [for name in local.eks_cluster_names : "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/${name}-ebs-csi-driver"]
-  irsa_role_arns        = [for name in local.eks_cluster_names : "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/${name}/*"]
-  irsa_policy_arns      = [for name in local.eks_cluster_names : "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:policy/${name}/*"]
+  cluster_role_arns     = [for name in var.cluster_names : "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/${name}-cluster-role"]
+  node_role_arns        = [for name in var.cluster_names : "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/${name}-node-role"]
+  ebs_csi_role_arns     = [for name in var.cluster_names : "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/${name}-ebs-csi-driver"]
+  irsa_role_arns        = [for name in var.cluster_names : "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/${name}/*"]
+  irsa_policy_arns      = [for name in var.cluster_names : "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:policy/${name}/*"]
   eks_nodegroup_slr_arn = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/aws-service-role/eks-nodegroup.amazonaws.com/AWSServiceRoleForAmazonEKSNodegroup"
-  cluster_arns          = [for name in local.eks_cluster_names : "arn:${data.aws_partition.current.partition}:eks:${local.region}:${data.aws_caller_identity.current.account_id}:cluster/${name}"]
-  nodegroup_arns        = [for name in local.eks_cluster_names : "arn:${data.aws_partition.current.partition}:eks:${local.region}:${data.aws_caller_identity.current.account_id}:nodegroup/${name}/*/*"]
-  addon_arns            = [for name in local.eks_cluster_names : "arn:${data.aws_partition.current.partition}:eks:${local.region}:${data.aws_caller_identity.current.account_id}:addon/${name}/*/*"]
+  cluster_arns          = [for name in var.cluster_names : "arn:${data.aws_partition.current.partition}:eks:${var.region}:${data.aws_caller_identity.current.account_id}:cluster/${name}"]
+  nodegroup_arns        = [for name in var.cluster_names : "arn:${data.aws_partition.current.partition}:eks:${var.region}:${data.aws_caller_identity.current.account_id}:nodegroup/${name}/*/*"]
+  addon_arns            = [for name in var.cluster_names : "arn:${data.aws_partition.current.partition}:eks:${var.region}:${data.aws_caller_identity.current.account_id}:addon/${name}/*/*"]
   oidc_provider_arns    = ["arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:oidc-provider/*"]
-  tf_state_bucket_arn   = "arn:${data.aws_partition.current.partition}:s3:::${local.tf_state_bucket}"
+  tf_state_bucket_arn   = "arn:${data.aws_partition.current.partition}:s3:::${var.tf_state_bucket}"
   tf_state_object_arns = [
     for key in local.tf_state_keys :
     "${local.tf_state_bucket_arn}/${key}"
   ]
-}
-
-resource "aws_s3_bucket" "tf_state" {
-  bucket = local.tf_state_bucket
-}
-
-resource "aws_s3_bucket_versioning" "tf_state" {
-  bucket = aws_s3_bucket.tf_state.id
-
-  versioning_configuration {
-    status = "Enabled"
-  }
 }
 
 resource "aws_iam_role" "this" {
@@ -66,7 +49,7 @@ resource "aws_iam_role" "this" {
       {
         Effect = "Allow"
         Principal = {
-          AWS = local.trusted_principals
+          AWS = var.trusted_principals
         }
         Action = "sts:AssumeRole"
       }
@@ -74,9 +57,9 @@ resource "aws_iam_role" "this" {
   })
 }
 
-resource "aws_iam_policy" "terraform_eks_small" {
+resource "aws_iam_policy" "clusterspinner" {
   name        = local.policy_name
-  description = "Permissions needed to apply the terraform-eks-small EKS stack."
+  description = "Permissions needed to apply the clusterspinner EKS stack."
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -255,7 +238,7 @@ resource "aws_iam_policy" "terraform_eks_small" {
         Resource = local.oidc_provider_arns
       },
       {
-        Sid    = "Route53ManagePlaygroundZone"
+        Sid    = "Route53ManageParentZone"
         Effect = "Allow"
         Action = [
           "route53:CreateHostedZone",
@@ -299,9 +282,9 @@ resource "aws_iam_policy" "terraform_eks_small" {
 
 resource "aws_iam_role_policy_attachment" "attach" {
   role       = aws_iam_role.this.name
-  policy_arn = aws_iam_policy.terraform_eks_small.arn
+  policy_arn = aws_iam_policy.clusterspinner.arn
 }
 
-resource "aws_route53_zone" "playground" {
-  name = "playground.swigger.io"
+resource "aws_route53_zone" "parent_zone" {
+  name = var.zone_name
 }
