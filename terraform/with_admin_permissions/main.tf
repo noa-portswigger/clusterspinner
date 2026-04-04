@@ -294,3 +294,9 @@ resource "aws_iam_role_policy_attachment" "attach" {
 resource "aws_route53_zone" "parent_zone" {
   name = var.zone_name
 }
+
+resource "aws_ssm_parameter" "dns_zone_name" {
+  name  = "/${var.ssm_prefix}/dns_zone_name"
+  type  = "String"
+  value = var.zone_name
+}
