@@ -1,13 +1,9 @@
-data "aws_ssm_parameter" "region" {
-  name = "/${var.ssm_prefix}/region"
-}
-
 data "aws_ssm_parameter" "tf_bucket_name" {
   name = "/${var.ssm_prefix}/tf_bucket_name"
 }
 
 provider "aws" {
-  region = data.aws_ssm_parameter.region.value
+  region = var.region
 }
 
 data "aws_caller_identity" "current" {}
@@ -17,7 +13,7 @@ data "aws_partition" "current" {}
 locals {
   role_name       = "clusterspinner"
   policy_name     = "clusterspinner-policy"
-  region          = data.aws_ssm_parameter.region.value
+  region          = var.region
   tf_state_bucket = data.aws_ssm_parameter.tf_bucket_name.value
 
   tf_state_keys = [

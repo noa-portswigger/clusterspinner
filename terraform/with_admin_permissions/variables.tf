@@ -1,5 +1,10 @@
+variable "region" {
+  description = "AWS region."
+  type        = string
+}
+
 variable "ssm_prefix" {
-  description = "SSM parameter path prefix to read region and tf_bucket_name from."
+  description = "SSM parameter path prefix to read tf_bucket_name from."
   type        = string
   default     = "clusterspinner"
 }
