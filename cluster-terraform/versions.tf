@@ -2,7 +2,7 @@ terraform {
   required_version = ">= 1.5.0"
 
   backend "s3" {
-    bucket = "noa-tf-state-658786808637-eu-west-2-an"
+    bucket = "clusterspinner-state-658786808637-eu-west-2"
     key    = "cluster-terraform/terraform.tfstate"
     region = "eu-west-2"
   }

@@ -35,7 +35,7 @@ kubectl get nodes
 
 - The defaults are hard-coded in `main.tf`: region `eu-west-2`, cluster name `noa-deleteme`, and Kubernetes version `1.35`.
 - Kubernetes `1.35` is currently the latest standard-support Amazon EKS version on the AWS docs page, with Amazon EKS release date January 27, 2026.
-- This stack stores state in S3 at `s3://noa-tf-state-658786808637-eu-west-2-an/cluster-terraform/terraform.tfstate`.
+- This stack stores state in S3 at `s3://clusterspinner-state-658786808637-eu-west-2/cluster-terraform/terraform.tfstate`.
 - The defaults are intentionally small, but EKS still incurs AWS charges.
 - The worker nodes run in private subnets and use a single NAT gateway for outbound access.
 - If you want to cut cost further for non-production use, change `node_desired_size` in `main.tf` to `1`.

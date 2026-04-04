@@ -376,7 +376,7 @@ resource "aws_iam_role_policy" "cert_manager" {
         Sid    = "Route53ModifyPlaygroundZone"
         Effect = "Allow"
         Action = ["route53:ChangeResourceRecordSets"]
-        Resource = "arn:${data.aws_partition.current.partition}:route53:::hostedzone/${data.aws_route53_zone.playground.zone_id}"
+        Resource = "arn:${data.aws_partition.current.partition}:route53:::hostedzone/${data.aws_route53_zone.parent_zone.zone_id}"
       }
     ]
   })
@@ -728,7 +728,7 @@ resource "aws_iam_policy" "external_dns" {
           "route53:ListResourceRecordSets",
           "route53:ListTagsForResources"
         ]
-        Resource = "arn:${data.aws_partition.current.partition}:route53:::hostedzone/${data.aws_route53_zone.playground.zone_id}"
+        Resource = "arn:${data.aws_partition.current.partition}:route53:::hostedzone/${data.aws_route53_zone.parent_zone.zone_id}"
       },
       {
         Effect   = "Allow"
