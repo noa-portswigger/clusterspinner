@@ -1,6 +1,7 @@
 [variables]
 account_id = 658786808637
 cluster_name = "noa-deleteme"
+domain_name = "playground.swigger.io"
 
 [[helm]]
 namespace = "teleport-cluster"
@@ -19,3 +20,9 @@ namespace = "cert-manager"
 release = "cert-manager"
 values = ["cert-manager/values.yaml"]
 extra-resources = "cert-manager/extra"
+
+[[helm]]
+namespace = "external-dns"
+release = "external-dns"
+values = ["external-dns/values.yaml"]
+extra-resources = "external-dns/extra"
