@@ -1,6 +1,21 @@
+[variables]
+account_id = 658786808637
+cluster_name = "noa-deleteme"
+
 [[helm]]
 namespace = "teleport-cluster"
 release = "teleport-cluster"
 values = ["teleport/cluster-values.yaml"]
 #extra-resources = "teleport/extra"
 
+[[helm]]
+namespace = "kube-system"
+release = "aws-load-balancer-controller"
+values = ["aws-load-balancer-controller/values.yaml"]
+extra-resources = "aws-load-balancer-controller/extra"
+
+[[helm]]
+namespace = "cert-manager"
+release = "cert-manager"
+values = ["cert-manager/values.yaml"]
+extra-resources = "cert-manager/extra"

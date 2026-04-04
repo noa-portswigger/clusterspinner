@@ -1,0 +1,5 @@
+crds:
+  enabled: true
+serviceAccount:
+  annotations:
+    "eks.amazonaws.com/role-arn": "arn:aws:iam::{{account_id}}:role/{{cluster_name}}/cert-manager"

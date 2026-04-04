@@ -1,8 +1,20 @@
 repositories:
   - name: teleport
     url: https://charts.releases.teleport.dev
-  
+  - name: eks
+    url: https://aws.github.io/eks-charts
+  - name: jetstack
+    url: https://charts.jetstack.io
+
 releases:
   - name: teleport-cluster
     chart: teleport/teleport-cluster
     version: 18.7.3
+
+  - name: aws-load-balancer-controller
+    chart: eks/aws-load-balancer-controller
+    version: 3.1.0
+
+  - name: cert-manager
+    chart: jetstack/cert-manager
+    version: v1.19.1

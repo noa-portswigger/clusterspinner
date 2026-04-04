@@ -10,7 +10,7 @@ locals {
   region           = "eu-west-2"
   role_name        = "terraform-eks-small-runner"
   policy_name      = "terraform-eks-small-runner-policy"
-  eks_cluster_names = ["noa-deleteme", "my-cluster", "noa-delete-me"]
+  eks_cluster_names = ["noa-deleteme", "my-cluster"]
   tf_state_bucket   = "noa-tf-state-658786808637-eu-west-2-an"
   tf_state_keys = [
     "cluster-terraform/terraform.tfstate",
@@ -31,6 +31,8 @@ locals {
   cluster_role_arns     = [for name in local.eks_cluster_names : "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/${name}-cluster-role"]
   node_role_arns        = [for name in local.eks_cluster_names : "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/${name}-node-role"]
   ebs_csi_role_arns     = [for name in local.eks_cluster_names : "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/${name}-ebs-csi-driver"]
+  irsa_role_arns        = [for name in local.eks_cluster_names : "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/${name}/*"]
+  irsa_policy_arns      = [for name in local.eks_cluster_names : "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:policy/${name}/*"]
   eks_nodegroup_slr_arn = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/aws-service-role/eks-nodegroup.amazonaws.com/AWSServiceRoleForAmazonEKSNodegroup"
   cluster_arns          = [for name in local.eks_cluster_names : "arn:${data.aws_partition.current.partition}:eks:${local.region}:${data.aws_caller_identity.current.account_id}:cluster/${name}"]
   nodegroup_arns        = [for name in local.eks_cluster_names : "arn:${data.aws_partition.current.partition}:eks:${local.region}:${data.aws_caller_identity.current.account_id}:nodegroup/${name}/*/*"]
@@ -181,12 +183,15 @@ resource "aws_iam_policy" "terraform_eks_small" {
           "iam:GetRole",
           "iam:ListAttachedRolePolicies",
           "iam:ListInstanceProfilesForRole",
+          "iam:DeleteRolePolicy",
+          "iam:GetRolePolicy",
           "iam:ListRolePolicies",
+          "iam:PutRolePolicy",
           "iam:TagRole",
           "iam:UntagRole",
           "iam:UpdateAssumeRolePolicy"
         ]
-        Resource = concat(local.cluster_role_arns, local.node_role_arns, local.ebs_csi_role_arns, [local.eks_nodegroup_slr_arn])
+        Resource = concat(local.cluster_role_arns, local.node_role_arns, local.ebs_csi_role_arns, local.irsa_role_arns, [local.eks_nodegroup_slr_arn])
       },
       {
         Sid    = "IamManagedPolicyReadAndPassRole"
@@ -197,7 +202,23 @@ resource "aws_iam_policy" "terraform_eks_small" {
           "iam:ListPolicyVersions",
           "iam:PassRole"
         ]
-        Resource = concat(local.managed_policy_arns, local.cluster_role_arns, local.node_role_arns, local.ebs_csi_role_arns)
+        Resource = concat(local.managed_policy_arns, local.cluster_role_arns, local.node_role_arns, local.ebs_csi_role_arns, local.irsa_role_arns)
+      },
+      {
+        Sid    = "IamCustomerManagedPolicyLifecycle"
+        Effect = "Allow"
+        Action = [
+          "iam:CreatePolicy",
+          "iam:DeletePolicy",
+          "iam:CreatePolicyVersion",
+          "iam:DeletePolicyVersion",
+          "iam:GetPolicy",
+          "iam:GetPolicyVersion",
+          "iam:ListPolicyVersions",
+          "iam:TagPolicy",
+          "iam:UntagPolicy"
+        ]
+        Resource = local.irsa_policy_arns
       },
       {
         Sid    = "IamCreateEksServiceLinkedRole"
@@ -240,6 +261,7 @@ resource "aws_iam_policy" "terraform_eks_small" {
           "route53:CreateHostedZone",
           "route53:DeleteHostedZone",
           "route53:GetHostedZone",
+          "route53:ListHostedZones",
           "route53:ListTagsForResource",
           "route53:ChangeTagsForResource",
           "route53:ChangeResourceRecordSets",
