@@ -417,8 +417,6 @@ resource "aws_iam_role" "aws_load_balancer_controller" {
 # Specifically:
 # - EC2 security group write operations are restricted to the cluster VPC via an
 #   ArnEquals condition on ec2:Vpc.
-# - ELB resource write operations are additionally scoped to resources tagged with
-#   kubernetes.io/cluster/<cluster-name> via a Null condition.
 resource "aws_iam_policy" "aws_load_balancer_controller" {
   name = "${local.cluster_name}-aws-load-balancer-controller"
   path = "/${local.cluster_name}/"
@@ -633,8 +631,7 @@ resource "aws_iam_policy" "aws_load_balancer_controller" {
         "Resource" : "*",
         "Condition" : {
           "Null" : {
-            "aws:ResourceTag/elbv2.k8s.aws/cluster" : "false",
-            "aws:ResourceTag/kubernetes.io/cluster/${local.cluster_name}" : "false"
+            "aws:ResourceTag/elbv2.k8s.aws/cluster" : "false"
           }
         }
       },

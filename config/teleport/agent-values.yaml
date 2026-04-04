@@ -1,0 +1,13 @@
+roles: app,discovery
+kubeClusterName: {{cluster_name}}
+proxyAddr: {{cluster_name}}.{{domain_name}}:443
+# this seems like a bug in teleport, just seeing if we can get it to run
+teleportClusterName: teleport.noa-deleteme.swigger.io
+joinParams:
+  method: kubernetes
+  tokenName: kubernetes-token
+kubernetesDiscovery:
+  - types: ["app"]
+    namespaces: ["*"]
+    labels:
+      noa.re/discover: enabled

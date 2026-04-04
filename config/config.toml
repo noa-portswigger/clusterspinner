@@ -26,3 +26,9 @@ namespace = "external-dns"
 release = "external-dns"
 values = ["external-dns/values.yaml"]
 extra-resources = "external-dns/extra"
+
+[[helm]]
+namespace = "teleport"
+release = "teleport-kube-agent"
+values = ["teleport/agent-values.yaml"]
+
