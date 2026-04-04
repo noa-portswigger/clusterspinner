@@ -1,10 +1,10 @@
 terraform {
   required_version = ">= 1.5.0"
 
+  # Bucket and region are not specified here so they can be supplied at init time:
+  # terraform init -backend-config="bucket=<bucket>" -backend-config="region=<region>"
   backend "s3" {
-    bucket = "clusterspinner-state-658786808637-eu-west-2"
-    key    = "cluster-terraform/terraform.tfstate"
-    region = "eu-west-2"
+    key = "setup-cluster/terraform.tfstate"
   }
 
   required_providers {

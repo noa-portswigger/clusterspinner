@@ -11,7 +11,7 @@ locals {
   policy_name = "clusterspinner-runner-policy"
 
   tf_state_keys = [
-    "cluster-terraform/terraform.tfstate",
+    "setup-cluster/terraform.tfstate",
     "admin-permissions/terraform.tfstate",
   ]
 

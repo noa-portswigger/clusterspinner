@@ -1,5 +1,5 @@
 provider "aws" {
-  region = local.region
+  region = var.region
 }
 
 provider "helm" {
@@ -10,7 +10,7 @@ provider "helm" {
     exec {
       api_version = "client.authentication.k8s.io/v1beta1"
       command     = "aws"
-      args        = ["eks", "get-token", "--cluster-name", aws_eks_cluster.this.name, "--region", local.region]
+      args        = ["eks", "get-token", "--cluster-name", aws_eks_cluster.this.name, "--region", var.region]
     }
   }
 }
@@ -23,22 +23,19 @@ data "aws_availability_zones" "available" {
 }
 
 locals {
-  region               = "eu-west-2"
-  cluster_name         = "noa-deleteme"
   cluster_version      = "1.35"
   vpc_cidr             = "10.0.0.0/16"
   public_subnet_cidrs  = ["10.0.0.0/20", "10.0.16.0/20"]
   private_subnet_cidrs = ["10.0.128.0/20", "10.0.144.0/20"]
-  # node_instance_types  = ["r6g.large"]
-  node_instance_types  = ["t3.small"]
+  node_instance_types  = ["r6g.large"]
   node_desired_size    = 3
   node_min_size        = 3
   node_max_size        = 3
   azs                  = slice(data.aws_availability_zones.available.names, 0, 2)
 
   common_tags = {
-    Project = local.cluster_name
-    OWNER   = "noa.resare@portswigger.net"
+    Project = var.cluster_name
+    OWNER   = var.owner
     EXPIRES = "2026-04-01"
   }
 }
@@ -49,7 +46,7 @@ resource "aws_vpc" "this" {
   enable_dns_support   = true
 
   tags = merge(local.common_tags, {
-    Name = "${local.cluster_name}-vpc"
+    Name = "${var.cluster_name}-vpc"
   })
 }
 
@@ -57,7 +54,7 @@ resource "aws_internet_gateway" "this" {
   vpc_id = aws_vpc.this.id
 
   tags = merge(local.common_tags, {
-    Name = "${local.cluster_name}-igw"
+    Name = "${var.cluster_name}-igw"
   })
 }
 
@@ -70,8 +67,8 @@ resource "aws_subnet" "public" {
   map_public_ip_on_launch = true
 
   tags = merge(local.common_tags, {
-    Name                                          = "${local.cluster_name}-public-${count.index + 1}"
-    "kubernetes.io/cluster/${local.cluster_name}" = "shared"
+    Name                                          = "${var.cluster_name}-public-${count.index + 1}"
+    "kubernetes.io/cluster/${var.cluster_name}" = "shared"
     "kubernetes.io/role/elb"                      = "1"
   })
 }
@@ -84,8 +81,8 @@ resource "aws_subnet" "private" {
   availability_zone = local.azs[count.index]
 
   tags = merge(local.common_tags, {
-    Name                                          = "${local.cluster_name}-private-${count.index + 1}"
-    "kubernetes.io/cluster/${local.cluster_name}" = "shared"
+    Name                                          = "${var.cluster_name}-private-${count.index + 1}"
+    "kubernetes.io/cluster/${var.cluster_name}" = "shared"
     "kubernetes.io/role/internal-elb"             = "1"
   })
 }
@@ -94,7 +91,7 @@ resource "aws_eip" "nat" {
   domain = "vpc"
 
   tags = merge(local.common_tags, {
-    Name = "${local.cluster_name}-nat-eip"
+    Name = "${var.cluster_name}-nat-eip"
   })
 }
 
@@ -103,7 +100,7 @@ resource "aws_nat_gateway" "this" {
   subnet_id     = aws_subnet.public[0].id
 
   tags = merge(local.common_tags, {
-    Name = "${local.cluster_name}-nat"
+    Name = "${var.cluster_name}-nat"
   })
 
   depends_on = [aws_internet_gateway.this]
@@ -118,7 +115,7 @@ resource "aws_route_table" "public" {
   }
 
   tags = merge(local.common_tags, {
-    Name = "${local.cluster_name}-public-rt"
+    Name = "${var.cluster_name}-public-rt"
   })
 }
 
@@ -138,7 +135,7 @@ resource "aws_route_table" "private" {
   }
 
   tags = merge(local.common_tags, {
-    Name = "${local.cluster_name}-private-rt"
+    Name = "${var.cluster_name}-private-rt"
   })
 }
 
@@ -150,7 +147,7 @@ resource "aws_route_table_association" "private" {
 }
 
 resource "aws_security_group" "cluster" {
-  name_prefix = "${local.cluster_name}-cluster-"
+  name_prefix = "${var.cluster_name}-cluster-"
   description = "EKS control plane security group"
   vpc_id      = aws_vpc.this.id
 
@@ -162,12 +159,12 @@ resource "aws_security_group" "cluster" {
   }
 
   tags = merge(local.common_tags, {
-    Name = "${local.cluster_name}-cluster-sg"
+    Name = "${var.cluster_name}-cluster-sg"
   })
 }
 
 resource "aws_iam_role" "cluster" {
-  name = "${local.cluster_name}-cluster-role"
+  name = "${var.cluster_name}-cluster-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -189,7 +186,7 @@ resource "aws_iam_role_policy_attachment" "cluster_policy" {
 }
 
 resource "aws_eks_cluster" "this" {
-  name     = local.cluster_name
+  name     = var.cluster_name
   role_arn = aws_iam_role.cluster.arn
   version  = local.cluster_version
 
@@ -211,7 +208,7 @@ resource "aws_eks_cluster" "this" {
 }
 
 resource "aws_iam_role" "node" {
-  name = "${local.cluster_name}-node-role"
+  name = "${var.cluster_name}-node-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -279,7 +276,7 @@ resource "aws_iam_openid_connect_provider" "eks" {
 }
 
 resource "aws_iam_role" "ebs_csi_driver" {
-  name = "${local.cluster_name}-ebs-csi-driver"
+  name = "${var.cluster_name}-ebs-csi-driver"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -318,14 +315,14 @@ resource "aws_eks_addon" "ebs_csi_driver" {
   depends_on = [aws_eks_node_group.default]
 }
 
-data "aws_route53_zone" "playground" {
+data "aws_route53_zone" "parent_zone" {
   name         = "playground.swigger.io"
   private_zone = false
 }
 
 resource "aws_iam_role" "cert_manager" {
   name = "cert-manager"
-  path = "/${local.cluster_name}/"
+  path = "/${var.cluster_name}/"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -350,7 +347,7 @@ resource "aws_iam_role" "cert_manager" {
 }
 
 resource "aws_iam_role_policy" "cert_manager" {
-  name = "${local.cluster_name}-cert-manager-policy"
+  name = "${var.cluster_name}-cert-manager-policy"
   role = aws_iam_role.cert_manager.id
 
   policy = jsonencode({
@@ -384,7 +381,7 @@ resource "aws_iam_role_policy" "cert_manager" {
 
 resource "aws_iam_role" "aws_load_balancer_controller" {
   name = "aws-load-balancer-controller"
-  path = "/${local.cluster_name}/"
+  path = "/${var.cluster_name}/"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -418,8 +415,8 @@ resource "aws_iam_role" "aws_load_balancer_controller" {
 # - EC2 security group write operations are restricted to the cluster VPC via an
 #   ArnEquals condition on ec2:Vpc.
 resource "aws_iam_policy" "aws_load_balancer_controller" {
-  name = "${local.cluster_name}-aws-load-balancer-controller"
-  path = "/${local.cluster_name}/"
+  name = "${var.cluster_name}-aws-load-balancer-controller"
+  path = "/${var.cluster_name}/"
 
   policy = jsonencode({
     "Version" : "2012-10-17",
@@ -501,7 +498,7 @@ resource "aws_iam_policy" "aws_load_balancer_controller" {
         "Resource" : "*",
         "Condition" : {
           "ArnEquals" : {
-            "ec2:Vpc" : "arn:aws:ec2:${local.region}:${data.aws_caller_identity.current.account_id}:vpc/${aws_vpc.this.id}"
+            "ec2:Vpc" : "arn:aws:ec2:${var.region}:${data.aws_caller_identity.current.account_id}:vpc/${aws_vpc.this.id}"
           }
         }
       },
@@ -513,7 +510,7 @@ resource "aws_iam_policy" "aws_load_balancer_controller" {
       {
         "Effect" : "Allow",
         "Action" : ["ec2:CreateSecurityGroup"],
-        "Resource" : "arn:aws:ec2:${local.region}:${data.aws_caller_identity.current.account_id}:vpc/${aws_vpc.this.id}"
+        "Resource" : "arn:aws:ec2:${var.region}:${data.aws_caller_identity.current.account_id}:vpc/${aws_vpc.this.id}"
       },
       {
         "Effect" : "Allow",
@@ -552,7 +549,7 @@ resource "aws_iam_policy" "aws_load_balancer_controller" {
         "Resource" : "*",
         "Condition" : {
           "ArnEquals" : {
-            "ec2:Vpc" : "arn:aws:ec2:${local.region}:${data.aws_caller_identity.current.account_id}:vpc/${aws_vpc.this.id}"
+            "ec2:Vpc" : "arn:aws:ec2:${var.region}:${data.aws_caller_identity.current.account_id}:vpc/${aws_vpc.this.id}"
           },
           "Null" : {
             "aws:ResourceTag/elbv2.k8s.aws/cluster" : "false"
@@ -688,7 +685,7 @@ resource "aws_iam_role_policy_attachment" "aws_load_balancer_controller" {
 
 resource "aws_iam_role" "external_dns" {
   name = "external-dns"
-  path = "/${local.cluster_name}/"
+  path = "/${var.cluster_name}/"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -715,8 +712,8 @@ resource "aws_iam_role" "external_dns" {
 # Policy sourced from https://github.com/kubernetes-sigs/external-dns/blob/master/docs/tutorials/aws.md
 # Scoped to the playground.swigger.io hosted zone rather than hostedzone/*.
 resource "aws_iam_policy" "external_dns" {
-  name = "${local.cluster_name}-external-dns"
-  path = "/${local.cluster_name}/"
+  name = "${var.cluster_name}-external-dns"
+  path = "/${var.cluster_name}/"
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -760,14 +757,14 @@ resource "helm_release" "argocd" {
 }
 
 resource "terraform_data" "argocd_app" {
-  triggers_replace = sha256(templatefile("${path.module}/argo-app.yaml", { cluster_name = local.cluster_name }))
+  triggers_replace = sha256(templatefile("${path.module}/argo-app.yaml", { cluster_name = var.cluster_name }))
 
   provisioner "local-exec" {
     interpreter = ["bash", "-c"]
     command     = <<-EOT
-      aws eks update-kubeconfig --region ${local.region} --name ${local.cluster_name}
+      aws eks update-kubeconfig --region ${var.region} --name ${var.cluster_name}
       kubectl apply -f - <<'MANIFEST'
-      ${templatefile("${path.module}/argo-app.yaml", { cluster_name = local.cluster_name })}
+      ${templatefile("${path.module}/argo-app.yaml", { cluster_name = var.cluster_name })}
       MANIFEST
     EOT
   }
