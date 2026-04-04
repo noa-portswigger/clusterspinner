@@ -12,3 +12,4 @@ override.tf.json
 .terraform.tfstate.lock.info
 errored.tfstate
 .idea/
+terraform.tfvars
