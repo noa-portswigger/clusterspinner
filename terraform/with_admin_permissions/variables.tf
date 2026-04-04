@@ -3,10 +3,9 @@ variable "region" {
   type        = string
 }
 
-variable "ssm_prefix" {
-  description = "SSM parameter path prefix to read tf_bucket_name from."
+variable "tf_state_bucket" {
+  description = "Name of the S3 bucket used for Terraform state."
   type        = string
-  default     = "clusterspinner"
 }
 
 variable "cluster_names" {

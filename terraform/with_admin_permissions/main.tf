@@ -1,7 +1,3 @@
-data "aws_ssm_parameter" "tf_bucket_name" {
-  name = "/${var.ssm_prefix}/tf_bucket_name"
-}
-
 provider "aws" {
   region = var.region
 }
@@ -14,7 +10,7 @@ locals {
   role_name       = "clusterspinner"
   policy_name     = "clusterspinner-policy"
   region          = var.region
-  tf_state_bucket = data.aws_ssm_parameter.tf_bucket_name.value
+  tf_state_bucket = var.tf_state_bucket
 
   tf_state_keys = [
     "setup-cluster/terraform.tfstate",
@@ -293,10 +289,4 @@ resource "aws_iam_role_policy_attachment" "attach" {
 
 resource "aws_route53_zone" "parent_zone" {
   name = var.zone_name
-}
-
-resource "aws_ssm_parameter" "dns_zone_name" {
-  name  = "/${var.ssm_prefix}/dns_zone_name"
-  type  = "String"
-  value = var.zone_name
 }
