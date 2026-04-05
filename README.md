@@ -19,6 +19,12 @@ There are three stages of terraform to set up the environment.
    zone to some other DNS zone that you already control.
 3. Run the cluster level terraform setup. This can be done one or more times to set up independent clusters.
 
+The terraform run in setup_cluster will set up ArgoCD in the newly created cluster that will attempt to clone 
+and apply configuration from a public git repo. The content of this repo is generated using the 
+[manifest-builder](https://github.com/nresare/manifest-builder) tool from the `config` directory.
+
+The manifests are set up to bring up a Teleport cluster with endpoint that can be used to access the cluster.
+
 ## Prerequisites
 
 * terraform, I install my terraform with `brew install terraform`
@@ -32,10 +38,38 @@ There are three stages of terraform to set up the environment.
 * Run `terraform apply -var=bucket_name=$BUCKET -var=region=$REGION`
 
 ### Create the account level terraform setup
-* Set up your AWS credentials with a role with braod permissions such as `AdministratorAccess`
+* Set up your AWS credentials with a role with broad permissions such as `AdministratorAccess`
 * Go to the `terraform/with_admin_permissions` directory and run `terraform init -backend-config=bucket=$BUCKET -backend-config=region=$REGION`,
-* Run `terraform apply -var=tf_state_bucket=$BUCKET -var=region=$REGION`
+* Run `terraform plan` and `terraform apply`
+* 
+### Run the terraform to setup the cluster
+* Assume the clusterspinner role that was created in the previous step.
+* Go to the `terraform/setup_cluster` directory and run `terraform init -backend-config=bucket=$BUCKET -backend-config=region=$REGION`,
+* Run `terraform plan` and `terraform apply`
   * You will be prompted for cluster names that you want to create. This can be modified in the future, so if this
-    is a first setup, I would recommend just picking one name. I provided `["cluster0"]` in this case.
-  * You will be prompted for trusted principals. This is a list of AWS IAM principals that will be allowed to assume
+      is a first setup, I would recommend just picking one name. I provided `["cluster0"]` in this case.
+  * You will be prompted for trusted principals. This is a list of AWS IAM principal ARNs that will be allowed to assume
     the clusterspinner role that this invocation creates.
+  * You also need to pick a github namespace for the manifest configuration. This can be a user or an organization.
+* The last step typically takes a bit more than 10 minutes, so plenty of time
+  to continue with the steps:
+
+### Set up the manifest repository
+
+* Create a respository in the github location you picked above named `$cluster-manifets`
+* Install latest [manifest-builder](https://github.com/nresare/manifest-builder) tool
+* I invoked `uv run manifest-builder -c config -o ../cluster0-manifests --create-commit --allow-dirty-config`
+* Push the generated directory to the newly created repository
+
+### Delegate the domain
+
+If it has not been done previously, you need to set up This depends on how your parent dns Zone is set up. The 
+NS-records you need to add in the parent zone were printed when running the account level terraform setup.
+
+### Grant yourself Teleport access.
+
+This is unfortunately not automated yet:
+* Using your clusterspinner role, you can configure kubectl: `aws eks update-kubeconfig --region $REGION --name $CLUSTER`
+* Invoke `kubectl -n teleport-cluster exec deploy/teleport-cluster-auth -- tctl users add $USER --roles=access,editor`
+* This should print a one-time link that you can use to set your password and 2-factor authentication.
+

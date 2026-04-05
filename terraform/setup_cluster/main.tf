@@ -23,22 +23,20 @@ data "aws_availability_zones" "available" {
 }
 
 locals {
-  cluster_version      = "1.35"
-  vpc_cidr             = "10.0.0.0/16"
-  public_subnet_cidrs  = ["10.0.0.0/20", "10.0.16.0/20"]
-  private_subnet_cidrs = ["10.0.128.0/20", "10.0.144.0/20"]
-  node_instance_types  = ["r6g.large"]
-  node_desired_size    = 3
-  node_min_size        = 3
-  node_max_size        = 3
-  azs                  = slice(data.aws_availability_zones.available.names, 0, 2)
+  cluster_version     = "1.35"
+  vpc_cidr            = "10.0.0.0/16"
+  node_instance_types = ["t3a.large"]
+  node_desired_size   = 3
+  node_min_size       = 3
+  node_max_size       = 3
+  azs                 = data.aws_availability_zones.available.names
 
   common_tags = {
     Project = var.cluster_name
     OWNER   = var.owner
     EXPIRES = "2026-04-01"
   }
-}
+
 
 resource "aws_vpc" "this" {
   cidr_block           = local.vpc_cidr
@@ -59,10 +57,10 @@ resource "aws_internet_gateway" "this" {
 }
 
 resource "aws_subnet" "public" {
-  count = length(local.public_subnet_cidrs)
+  count = length(local.azs)
 
   vpc_id                  = aws_vpc.this.id
-  cidr_block              = local.public_subnet_cidrs[count.index]
+  cidr_block              = cidrsubnet(local.vpc_cidr, 4, count.index)
   availability_zone       = local.azs[count.index]
   map_public_ip_on_launch = true
 
@@ -74,10 +72,10 @@ resource "aws_subnet" "public" {
 }
 
 resource "aws_subnet" "private" {
-  count = length(local.private_subnet_cidrs)
+  count = length(local.azs)
 
   vpc_id            = aws_vpc.this.id
-  cidr_block        = local.private_subnet_cidrs[count.index]
+  cidr_block        = cidrsubnet(local.vpc_cidr, 4, count.index + 8)
   availability_zone = local.azs[count.index]
 
   tags = merge(local.common_tags, {
@@ -316,7 +314,7 @@ resource "aws_eks_addon" "ebs_csi_driver" {
 }
 
 data "aws_route53_zone" "parent_zone" {
-  name         = "playground.swigger.io"
+  name         = var.zone_name
   private_zone = false
 }
 
@@ -710,7 +708,7 @@ resource "aws_iam_role" "external_dns" {
 }
 
 # Policy sourced from https://github.com/kubernetes-sigs/external-dns/blob/master/docs/tutorials/aws.md
-# Scoped to the playground.swigger.io hosted zone rather than hostedzone/*.
+# Scoped to the parent hosted zone rather than hostedzone/*.
 resource "aws_iam_policy" "external_dns" {
   name = "${var.cluster_name}-external-dns"
   path = "/${var.cluster_name}/"
@@ -757,14 +755,14 @@ resource "helm_release" "argocd" {
 }
 
 resource "terraform_data" "argocd_app" {
-  triggers_replace = sha256(templatefile("${path.module}/argo-app.yaml", { cluster_name = var.cluster_name }))
+  triggers_replace = sha256(templatefile("${path.module}/argo-app.yaml", { cluster_name = var.cluster_name, github_namespace = var.github_namespace }))
 
   provisioner "local-exec" {
     interpreter = ["bash", "-c"]
     command     = <<-EOT
       aws eks update-kubeconfig --region ${var.region} --name ${var.cluster_name}
       kubectl apply -f - <<'MANIFEST'
-      ${templatefile("${path.module}/argo-app.yaml", { cluster_name = var.cluster_name })}
+      ${templatefile("${path.module}/argo-app.yaml", { cluster_name = var.cluster_name, github_namespace = var.github_namespace })}
       MANIFEST
     EOT
   }

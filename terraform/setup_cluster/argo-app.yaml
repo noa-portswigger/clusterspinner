@@ -12,7 +12,7 @@ spec:
       jsonnet: {}
       recurse: true
     path: .
-    repoURL: https://github.com/noa-portswigger/${cluster_name}-manifests
+    repoURL: https://github.com/${github_namespace}/${cluster_name}-manifests
     targetRevision: HEAD
   syncPolicy:
     automated:

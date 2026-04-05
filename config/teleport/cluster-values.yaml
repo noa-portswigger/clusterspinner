@@ -1,4 +1,4 @@
-clusterName: {{cluster_name}}.playground.swigger.io
+clusterName: {{cluster_name}}.{{domain_name}}
 highAvailability:
   requireAntiAffinity: true
   certManager:
@@ -7,10 +7,14 @@ highAvailability:
     issuerKind: ClusterIssuer
 persistence:
   storageClassName: gp2
+operator:
+  enabled: true
 
 annotations:
   service:
-    external-dns.alpha.kubernetes.io/hostname: "*.{{cluster_name}}.playground.swigger.io,{{cluster_name}}.playground.swigger.io"
+    external-dns.alpha.kubernetes.io/hostname: "*.{{cluster_name}}.{{domain_name}},{{cluster_name}}.{{domain_name}}"
     service.beta.kubernetes.io/aws-load-balancer-scheme: internet-facing
-    service.beta.kubernetes.io/aws-load-balancer-healthcheck-protocol: HTTP
+    service.beta.kubernetes.io/aws-load-balancer-healthcheck-protocol: HTTPS
     service.beta.kubernetes.io/aws-load-balancer-healthcheck-path: /
+    service.beta.kubernetes.io/aws-load-balancer-type: nlb
+    service.beta.kubernetes.io/aws-load-balancer-nlb-target-type: ip

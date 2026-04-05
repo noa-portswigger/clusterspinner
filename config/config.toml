@@ -1,13 +1,13 @@
 [variables]
 account_id = 658786808637
-cluster_name = "noa-deleteme"
-domain_name = "playground.swigger.io"
+cluster_name = "cluster0"
+domain_name = "aws.noa.re"
 
 [[helm]]
 namespace = "teleport-cluster"
 release = "teleport-cluster"
 values = ["teleport/cluster-values.yaml"]
-#extra-resources = "teleport/extra"
+extra-resources = "teleport/extra"
 
 [[helm]]
 namespace = "kube-system"
