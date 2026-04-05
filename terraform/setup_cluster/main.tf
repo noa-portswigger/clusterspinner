@@ -23,20 +23,20 @@ data "aws_availability_zones" "available" {
 }
 
 locals {
-  cluster_version     = "1.35"
-  vpc_cidr            = "10.0.0.0/16"
+  cluster_version   = "1.35"
+  vpc_cidr          = "10.0.0.0/16"
   node_instance_types = ["t3a.large"]
-  node_desired_size   = 3
-  node_min_size       = 3
-  node_max_size       = 3
-  azs                 = data.aws_availability_zones.available.names
+  node_desired_size = 3
+  node_min_size     = 3
+  node_max_size     = 3
+  azs               = data.aws_availability_zones.available.names
 
   common_tags = {
     Project = var.cluster_name
     OWNER   = var.owner
     EXPIRES = "2026-04-01"
   }
-
+}
 
 resource "aws_vpc" "this" {
   cidr_block           = local.vpc_cidr
