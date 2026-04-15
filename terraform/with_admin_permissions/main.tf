@@ -22,19 +22,27 @@ locals {
     "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonEKSWorkerNodePolicy",
     "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonEKS_CNI_Policy",
     "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly",
+    "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonEC2ContainerRegistryPullOnly",
+    "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonSSMManagedInstanceCore",
     "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy",
   ]
 
-  cluster_role_arns     = [for name in var.cluster_names : "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/${name}-cluster-role"]
-  node_role_arns        = [for name in var.cluster_names : "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/${name}-node-role"]
-  ebs_csi_role_arns     = [for name in var.cluster_names : "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/${name}-ebs-csi-driver"]
-  irsa_role_arns        = [for name in var.cluster_names : "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/${name}/*"]
-  irsa_policy_arns      = [for name in var.cluster_names : "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:policy/${name}/*"]
-  eks_nodegroup_slr_arn = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/aws-service-role/eks-nodegroup.amazonaws.com/AWSServiceRoleForAmazonEKSNodegroup"
-  cluster_arns          = [for name in var.cluster_names : "arn:${data.aws_partition.current.partition}:eks:${local.region}:${data.aws_caller_identity.current.account_id}:cluster/${name}"]
-  nodegroup_arns        = [for name in var.cluster_names : "arn:${data.aws_partition.current.partition}:eks:${local.region}:${data.aws_caller_identity.current.account_id}:nodegroup/${name}/*/*"]
-  addon_arns            = [for name in var.cluster_names : "arn:${data.aws_partition.current.partition}:eks:${local.region}:${data.aws_caller_identity.current.account_id}:addon/${name}/*/*"]
-  oidc_provider_arns    = ["arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:oidc-provider/*"]
+  cluster_role_arns              = [for name in var.cluster_names : "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/${name}-cluster-role"]
+  node_role_arns                 = [for name in var.cluster_names : "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/${name}-node-role"]
+  ebs_csi_role_arns              = [for name in var.cluster_names : "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/${name}-ebs-csi-driver"]
+  irsa_role_arns                 = [for name in var.cluster_names : "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/${name}/*"]
+  irsa_policy_arns               = [for name in var.cluster_names : "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:policy/${name}/*"]
+  karpenter_node_role_arns       = [for name in var.cluster_names : "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/KarpenterNodeRole-${name}"]
+  karpenter_controller_role_arns = [for name in var.cluster_names : "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/${name}-karpenter"]
+  karpenter_policy_arns          = [for name in var.cluster_names : "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:policy/KarpenterController*-${name}"]
+  karpenter_queue_arns           = [for name in var.cluster_names : "arn:${data.aws_partition.current.partition}:sqs:${local.region}:${data.aws_caller_identity.current.account_id}:${name}"]
+  karpenter_event_rule_arns      = [for name in var.cluster_names : "arn:${data.aws_partition.current.partition}:events:${local.region}:${data.aws_caller_identity.current.account_id}:rule/${name}-karpenter-*"]
+  karpenter_access_entry_arns    = [for name in var.cluster_names : "arn:${data.aws_partition.current.partition}:eks:${local.region}:${data.aws_caller_identity.current.account_id}:access-entry/${name}/role/${data.aws_caller_identity.current.account_id}/KarpenterNodeRole-${name}/*"]
+  eks_nodegroup_slr_arn          = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/aws-service-role/eks-nodegroup.amazonaws.com/AWSServiceRoleForAmazonEKSNodegroup"
+  cluster_arns                   = [for name in var.cluster_names : "arn:${data.aws_partition.current.partition}:eks:${local.region}:${data.aws_caller_identity.current.account_id}:cluster/${name}"]
+  nodegroup_arns                 = [for name in var.cluster_names : "arn:${data.aws_partition.current.partition}:eks:${local.region}:${data.aws_caller_identity.current.account_id}:nodegroup/${name}/*/*"]
+  addon_arns                     = [for name in var.cluster_names : "arn:${data.aws_partition.current.partition}:eks:${local.region}:${data.aws_caller_identity.current.account_id}:addon/${name}/*/*"]
+  oidc_provider_arns             = ["arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:oidc-provider/*"]
   tf_state_bucket_arn   = "arn:${data.aws_partition.current.partition}:s3:::${local.tf_state_bucket}"
   tf_state_object_arns = [
     for key in local.tf_state_keys :
@@ -285,6 +293,118 @@ resource "aws_iam_policy" "clusterspinner" {
 resource "aws_iam_role_policy_attachment" "attach" {
   role       = aws_iam_role.this.name
   policy_arn = aws_iam_policy.clusterspinner.arn
+}
+
+resource "aws_iam_policy" "clusterspinner_karpenter" {
+  name        = "clusterspinner-karpenter-policy"
+  description = "Permissions needed to apply the Karpenter resources in the clusterspinner EKS stack."
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "IamRolesForKarpenter"
+        Effect = "Allow"
+        Action = [
+          "iam:AttachRolePolicy",
+          "iam:CreateRole",
+          "iam:DeleteRole",
+          "iam:DetachRolePolicy",
+          "iam:GetRole",
+          "iam:ListAttachedRolePolicies",
+          "iam:ListInstanceProfilesForRole",
+          "iam:DeleteRolePolicy",
+          "iam:GetRolePolicy",
+          "iam:ListRolePolicies",
+          "iam:PutRolePolicy",
+          "iam:TagRole",
+          "iam:UntagRole",
+          "iam:UpdateAssumeRolePolicy"
+        ]
+        Resource = concat(local.karpenter_node_role_arns, local.karpenter_controller_role_arns)
+      },
+      {
+        Sid    = "IamManagedPoliciesAndPassRoleForKarpenter"
+        Effect = "Allow"
+        Action = [
+          "iam:GetPolicy",
+          "iam:GetPolicyVersion",
+          "iam:ListPolicyVersions",
+          "iam:PassRole"
+        ]
+        Resource = concat(
+          [
+            "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonEC2ContainerRegistryPullOnly",
+            "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonSSMManagedInstanceCore",
+          ],
+          local.karpenter_node_role_arns,
+          local.karpenter_controller_role_arns
+        )
+      },
+      {
+        Sid    = "IamKarpenterControllerPolicies"
+        Effect = "Allow"
+        Action = [
+          "iam:CreatePolicy",
+          "iam:DeletePolicy",
+          "iam:CreatePolicyVersion",
+          "iam:DeletePolicyVersion",
+          "iam:GetPolicy",
+          "iam:GetPolicyVersion",
+          "iam:ListPolicyVersions",
+          "iam:TagPolicy",
+          "iam:UntagPolicy"
+        ]
+        Resource = local.karpenter_policy_arns
+      },
+      {
+        Sid    = "EksAccessEntryForKarpenterNodes"
+        Effect = "Allow"
+        Action = [
+          "eks:CreateAccessEntry",
+          "eks:DeleteAccessEntry",
+          "eks:DescribeAccessEntry"
+        ]
+        Resource = concat(local.cluster_arns, local.karpenter_access_entry_arns)
+      },
+      {
+        Sid    = "SqsKarpenterInterruptionQueue"
+        Effect = "Allow"
+        Action = [
+          "sqs:CreateQueue",
+          "sqs:DeleteQueue",
+          "sqs:GetQueueAttributes",
+          "sqs:GetQueueUrl",
+          "sqs:ListQueueTags",
+          "sqs:SetQueueAttributes",
+          "sqs:TagQueue",
+          "sqs:UntagQueue"
+        ]
+        Resource = local.karpenter_queue_arns
+      },
+      {
+        Sid    = "EventBridgeKarpenterRules"
+        Effect = "Allow"
+        Action = [
+          "events:DeleteRule",
+          "events:DescribeRule",
+          "events:ListTagsForResource",
+          "events:ListTargetsByRule",
+          "events:PutRule",
+          "events:PutTargets",
+          "events:RemoveTargets",
+          "events:TagResource",
+          "events:UntagResource"
+        ]
+        Resource = local.karpenter_event_rule_arns
+      },
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "attach_karpenter" {
+  role       = aws_iam_role.this.name
+  policy_arn = aws_iam_policy.clusterspinner_karpenter.arn
 }
 
 resource "aws_route53_zone" "parent_zone" {
