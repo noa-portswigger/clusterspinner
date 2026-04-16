@@ -1,6 +1,6 @@
 # IAM role for EC2 nodes launched by Karpenter
 resource "aws_iam_role" "karpenter_node" {
-  name = "KarpenterNodeRole-${var.cluster_name}"
+  name = "${var.cluster_name}-karpenter-node-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"

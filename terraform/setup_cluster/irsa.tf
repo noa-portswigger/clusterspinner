@@ -44,8 +44,7 @@ data "aws_route53_zone" "parent_zone" {
 }
 
 resource "aws_iam_role" "cert_manager" {
-  name = "cert-manager"
-  path = "/${var.cluster_name}/"
+  name = "${var.cluster_name}-cert-manager"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -103,8 +102,7 @@ resource "aws_iam_role_policy" "cert_manager" {
 }
 
 resource "aws_iam_role" "aws_load_balancer_controller" {
-  name = "aws-load-balancer-controller"
-  path = "/${var.cluster_name}/"
+  name = "${var.cluster_name}-aws-load-balancer-controller"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -139,7 +137,6 @@ resource "aws_iam_role" "aws_load_balancer_controller" {
 #   ArnEquals condition on ec2:Vpc.
 resource "aws_iam_policy" "aws_load_balancer_controller" {
   name = "${var.cluster_name}-aws-load-balancer-controller"
-  path = "/${var.cluster_name}/"
 
   policy = jsonencode({
     "Version" : "2012-10-17",
@@ -407,8 +404,7 @@ resource "aws_iam_role_policy_attachment" "aws_load_balancer_controller" {
 }
 
 resource "aws_iam_role" "external_dns" {
-  name = "external-dns"
-  path = "/${var.cluster_name}/"
+  name = "${var.cluster_name}-external-dns"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -436,7 +432,6 @@ resource "aws_iam_role" "external_dns" {
 # Scoped to the parent hosted zone rather than hostedzone/*.
 resource "aws_iam_policy" "external_dns" {
   name = "${var.cluster_name}-external-dns"
-  path = "/${var.cluster_name}/"
 
   policy = jsonencode({
     Version = "2012-10-17"
