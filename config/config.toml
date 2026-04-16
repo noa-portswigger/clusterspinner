@@ -1,6 +1,6 @@
 [variables]
 account_id = 658786808637
-cluster_name = "cluster0"
+cluster_name = "test0"
 domain_name = "aws.noa.re"
 
 [[helm]]
