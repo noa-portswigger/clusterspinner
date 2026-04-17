@@ -35,5 +35,6 @@ locals {
     Project = var.cluster_name
     OWNER   = var.owner
     EXPIRES = "2026-04-01"
+    "karpenter.sh/discovery" = var.cluster_name
   }
 }
