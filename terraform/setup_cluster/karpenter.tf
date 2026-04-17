@@ -1,50 +1,3 @@
-# IAM role for EC2 nodes launched by Karpenter
-resource "aws_iam_role" "karpenter_node" {
-  name = "${var.cluster_name}-karpenter-node-role"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Principal = {
-          Service = "ec2.${data.aws_partition.current.dns_suffix}"
-        }
-        Action = "sts:AssumeRole"
-      }
-    ]
-  })
-
-  tags = local.common_tags
-}
-
-resource "aws_iam_role_policy_attachment" "karpenter_node_cni" {
-  role       = aws_iam_role.karpenter_node.name
-  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonEKS_CNI_Policy"
-}
-
-resource "aws_iam_role_policy_attachment" "karpenter_node_worker" {
-  role       = aws_iam_role.karpenter_node.name
-  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonEKSWorkerNodePolicy"
-}
-
-resource "aws_iam_role_policy_attachment" "karpenter_node_ecr" {
-  role       = aws_iam_role.karpenter_node.name
-  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonEC2ContainerRegistryPullOnly"
-}
-
-resource "aws_iam_role_policy_attachment" "karpenter_node_ssm" {
-  role       = aws_iam_role.karpenter_node.name
-  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonSSMManagedInstanceCore"
-}
-
-# Allow Karpenter-launched nodes to join the cluster
-resource "aws_eks_access_entry" "karpenter_node" {
-  cluster_name  = aws_eks_cluster.this.name
-  principal_arn = aws_iam_role.karpenter_node.arn
-  type          = "EC2_LINUX"
-}
-
 # SQS queue for interruption handling (spot, rebalance, health, state-change events)
 resource "aws_sqs_queue" "karpenter_interruption" {
   name                      = var.cluster_name
@@ -287,7 +240,7 @@ resource "aws_iam_policy" "karpenter_iam_integration" {
       {
         Sid      = "AllowPassingInstanceRole"
         Effect   = "Allow"
-        Resource = aws_iam_role.karpenter_node.arn
+        Resource = aws_iam_role.node.arn
         Action   = "iam:PassRole"
         Condition = {
           StringEquals = {
