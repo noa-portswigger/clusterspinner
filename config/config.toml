@@ -2,6 +2,7 @@
 account_id = 658786808637
 cluster_name = "test0"
 domain_name = "aws.noa.re"
+aws_region = "eu-west-2"
 
 [[helm]]
 namespace = "teleport-cluster"

@@ -6,7 +6,7 @@ settings:
 controller:
   env:
     - name: AWS_REGION
-      value: eu-west-2
+      value: {{aws_region}}
   resources:
     requests:
       cpu: 1
@@ -14,3 +14,7 @@ controller:
     limits:
       cpu: 1
       memory: 1Gi
+
+serviceAccount:
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::{{account_id}}:role/{{cluster_name}}-karpenter
