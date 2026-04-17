@@ -4,6 +4,9 @@ settings:
   interruptionQueue: {{cluster_name}}
 
 controller:
+  env:
+    - name: AWS_REGION
+      value: eu-west-2
   resources:
     requests:
       cpu: 1
