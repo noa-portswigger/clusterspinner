@@ -37,3 +37,4 @@ values = ["teleport/agent-values.yaml"]
 namespace = "karpenter"
 release = "karpenter"
 values = ["karpenter/values.yaml"]
+extra-resources = "karpenter/extra"
