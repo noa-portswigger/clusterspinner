@@ -25,7 +25,7 @@ data "aws_availability_zones" "available" {
 locals {
   cluster_version   = "1.35"
   vpc_cidr          = "10.0.0.0/16"
-  node_instance_types = ["t3a.large"]
+  node_instance_types = ["r6g.large"]
   node_desired_size = 3
   node_min_size     = 3
   node_max_size     = 3
@@ -35,6 +35,5 @@ locals {
     Project = var.cluster_name
     OWNER   = var.owner
     EXPIRES = "2026-04-01"
-    "karpenter.sh/discovery" = var.cluster_name
   }
 }

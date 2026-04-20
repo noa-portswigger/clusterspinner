@@ -12,7 +12,6 @@ resource "aws_security_group" "cluster" {
 
   tags = merge(local.common_tags, {
     Name                     = "${var.cluster_name}-cluster-sg"
-    "karpenter.sh/discovery" = var.cluster_name
   })
 }
 
@@ -58,6 +57,12 @@ resource "aws_eks_cluster" "this" {
   depends_on = [aws_iam_role_policy_attachment.cluster_policy]
 
   tags = local.common_tags
+}
+
+resource "aws_ec2_tag" "cluster_sg_discovery" {
+  resource_id = aws_eks_cluster.this.vpc_config[0].cluster_security_group_id
+  key         = "karpenter.sh/discovery"
+  value       = var.cluster_name
 }
 
 resource "aws_iam_role" "node" {
@@ -110,6 +115,7 @@ resource "aws_eks_node_group" "default" {
 
   instance_types = local.node_instance_types
   capacity_type  = "ON_DEMAND"
+  ami_type       = "BOTTLEROCKET_ARM_64"
 
   scaling_config {
     desired_size = local.node_desired_size
