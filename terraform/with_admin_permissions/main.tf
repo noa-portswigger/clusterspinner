@@ -243,7 +243,8 @@ resource "aws_iam_policy" "clusterspinner" {
         Action = [
           "iam:DeleteOpenIDConnectProvider",
           "iam:GetOpenIDConnectProvider",
-          "iam:TagOpenIDConnectProvider"
+          "iam:TagOpenIDConnectProvider",
+          "iam:UntagOpenIDConnectProvider"
         ]
         Resource = local.oidc_provider_arns
       },
