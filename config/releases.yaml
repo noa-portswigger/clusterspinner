@@ -10,6 +10,9 @@ repositories:
   - name: karpenter
     url: public.ecr.aws/karpenter
     oci: true
+  - name: cilium
+    url: quay.io/cilium/charts
+    oci: true
 
 releases:
   - name: teleport-cluster
@@ -35,3 +38,7 @@ releases:
   - name: karpenter
     chart: karpenter/karpenter
     version: 1.11.1
+
+  - name: cilium
+    chart: cilium/cilium
+    version: 1.19.3
