@@ -16,3 +16,5 @@ hubble:
     service:
       labels:
         noa.re/discover: enabled
+      annotations:
+        teleport.dev/name: hubble
