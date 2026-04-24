@@ -11,3 +11,5 @@ hubble:
         name: aws-load-balancer-selfsigned-issuer
         kind: Issuer
         group: cert-manager.io
+  relay:
+    enabled: true
