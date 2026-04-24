@@ -1,0 +1,5 @@
+eni:
+  enabled: true
+  nodeSpec:
+    subnetTags:
+      - karpenter.sh/discovery={{cluster_name}}
