@@ -11,3 +11,8 @@ hubble:
         name: aws-load-balancer-root-issuer
   relay:
     enabled: true
+  ui:
+    enabled: true
+    service:
+      labels:
+        noa.re/discover: enabled
