@@ -3,3 +3,11 @@ eni:
   nodeSpec:
     subnetTags:
       - karpenter.sh/discovery={{cluster_name}}
+hubble:
+  tls:
+    auto:
+      method: certmanager
+      certManagerIssuerRef:
+        name: aws-load-balancer-selfsigned-issuer
+        kind: Issuer
+        group: cert-manager.io
