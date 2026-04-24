@@ -40,6 +40,6 @@ values = ["karpenter/values.yaml"]
 extra-resources = "karpenter/extra"
 
 [[helm]]
-namespace = "kube-system"
+namespace = "cilium"
 release = "cilium"
 values = ["cilium/values.yaml"]
