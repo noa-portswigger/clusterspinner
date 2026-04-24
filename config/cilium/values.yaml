@@ -8,7 +8,7 @@ hubble:
     auto:
       method: certmanager
       certManagerIssuerRef:
-        name: aws-load-balancer-root-issuer
+        name: leaf
   relay:
     enabled: true
   ui:
