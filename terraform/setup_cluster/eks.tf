@@ -123,6 +123,12 @@ resource "aws_eks_node_group" "default" {
     max_size     = local.node_max_size
   }
 
+  taint {
+    key    = "node.cilium.io/agent-not-ready"
+    value  = "true"
+    effect = "NO_EXECUTE"
+  }
+
   depends_on = [
     aws_iam_role_policy_attachment.node_worker,
     aws_iam_role_policy_attachment.node_cni,
