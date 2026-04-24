@@ -43,3 +43,4 @@ extra-resources = "karpenter/extra"
 namespace = "cilium"
 release = "cilium"
 values = ["cilium/values.yaml"]
+extra-resources = "cilium/extra"
