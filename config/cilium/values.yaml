@@ -8,8 +8,6 @@ hubble:
     auto:
       method: certmanager
       certManagerIssuerRef:
-        name: aws-load-balancer-selfsigned-issuer
-        kind: Issuer
-        group: cert-manager.io
+        name: aws-load-balancer-root-issuer
   relay:
     enabled: true
