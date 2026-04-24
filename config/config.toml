@@ -42,3 +42,4 @@ extra-resources = "karpenter/extra"
 [[helm]]
 namespace = "kube-system"
 release = "cilium"
+values = ["cilium/values.yaml"]
