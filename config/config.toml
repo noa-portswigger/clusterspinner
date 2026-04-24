@@ -38,3 +38,7 @@ namespace = "karpenter"
 release = "karpenter"
 values = ["karpenter/values.yaml"]
 extra-resources = "karpenter/extra"
+
+[[helm]]
+namespace = "kube-system"
+release = "cilium"
