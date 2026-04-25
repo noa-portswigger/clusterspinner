@@ -4,11 +4,11 @@ resource "helm_release" "argocd" {
   create_namespace = true
   repository       = "https://argoproj.github.io/argo-helm"
   chart            = "argo-cd"
-  version          = "9.4.17"
+  version          = "9.5.4"
 
   values = [file("${path.module}/argocd-values.yaml")]
 
-  depends_on = [aws_eks_node_group.default]
+  depends_on = [aws_eks_node_group.bootstrap]
 }
 
 resource "terraform_data" "argocd_app" {
