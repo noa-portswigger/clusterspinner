@@ -39,8 +39,8 @@ release = "karpenter"
 values = ["karpenter/values.yaml"]
 extra-resources = "karpenter/extra"
 
-[[helm]]
-namespace = "cilium"
-release = "cilium"
-values = ["cilium/values.yaml"]
-extra-resources = "cilium/extra"
+#[[helm]]
+#namespace = "cilium"
+#release = "cilium"
+#values = ["cilium/values.yaml"]
+#extra-resources = "cilium/extra"

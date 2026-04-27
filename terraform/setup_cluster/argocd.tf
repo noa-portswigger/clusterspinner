@@ -11,7 +11,7 @@ resource "helm_release" "argocd" {
     zone_name    = var.zone_name
   })]
 
-  depends_on = [aws_eks_node_group.bootstrap]
+  depends_on = [aws_eks_node_group.default, aws_eks_addon.coredns]
 }
 
 resource "terraform_data" "argocd_app" {

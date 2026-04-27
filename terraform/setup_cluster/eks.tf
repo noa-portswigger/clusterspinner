@@ -11,7 +11,7 @@ resource "aws_security_group" "cluster" {
   }
 
   tags = merge(local.common_tags, {
-    Name                     = "${var.cluster_name}-cluster-sg"
+    Name = "${var.cluster_name}-cluster-sg"
   })
 }
 
@@ -41,6 +41,8 @@ resource "aws_eks_cluster" "this" {
   name     = var.cluster_name
   role_arn = aws_iam_role.cluster.arn
   version  = local.cluster_version
+
+  bootstrap_self_managed_addons = false
 
   access_config {
     authentication_mode                         = "API_AND_CONFIG_MAP"
@@ -107,42 +109,6 @@ resource "aws_iam_role_policy_attachment" "node_ssm" {
   policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonSSMManagedInstanceCore"
 }
 
-data "kubernetes_resources" "cilium_daemonset" {
-  api_version    = "apps/v1"
-  kind           = "DaemonSet"
-  namespace      = "cilium"
-  field_selector = "metadata.name=cilium"
-
-  depends_on = [aws_eks_cluster.this]
-}
-
-resource "aws_eks_node_group" "bootstrap" {
-  cluster_name    = aws_eks_cluster.this.name
-  node_group_name = "bootstrap"
-  node_role_arn   = aws_iam_role.node.arn
-  subnet_ids      = aws_subnet.private[*].id
-
-  instance_types = local.node_instance_types
-  capacity_type  = "ON_DEMAND"
-  ami_type       = "BOTTLEROCKET_ARM_64"
-
-  scaling_config {
-    min_size     = local.cilium_ready ? 0 : local.node_desired_size
-    desired_size = local.cilium_ready ? 0 : local.node_desired_size
-    max_size     = local.cilium_ready ? 1 : local.node_desired_size
-  }
-
-  depends_on = [
-    aws_iam_role_policy_attachment.node_worker,
-    aws_iam_role_policy_attachment.node_cni,
-    aws_iam_role_policy_attachment.node_ecr,
-    aws_iam_role_policy_attachment.node_ecr_pull,
-    aws_iam_role_policy_attachment.node_ssm,
-  ]
-
-  tags = local.common_tags
-}
-
 resource "aws_eks_node_group" "default" {
   cluster_name    = aws_eks_cluster.this.name
   node_group_name = "default"
@@ -154,15 +120,9 @@ resource "aws_eks_node_group" "default" {
   ami_type       = "BOTTLEROCKET_ARM_64"
 
   scaling_config {
-    min_size     = local.cilium_ready ? local.node_desired_size : 0
-    desired_size = local.cilium_ready ? local.node_desired_size : 0
-    max_size     = local.cilium_ready ? local.node_desired_size : 1
-  }
-
-  taint {
-    key    = "node.cilium.io/agent-not-ready"
-    value  = "true"
-    effect = "NO_SCHEDULE"
+    min_size     = local.node_desired_size
+    desired_size = local.node_desired_size
+    max_size     = local.node_desired_size
   }
 
   depends_on = [
@@ -171,9 +131,22 @@ resource "aws_eks_node_group" "default" {
     aws_iam_role_policy_attachment.node_ecr,
     aws_iam_role_policy_attachment.node_ecr_pull,
     aws_iam_role_policy_attachment.node_ssm,
+    helm_release.cilium,
   ]
 
   tags = local.common_tags
+}
+
+resource "aws_eks_addon" "coredns" {
+  cluster_name = aws_eks_cluster.this.name
+  addon_name   = "coredns"
+
+  resolve_conflicts_on_create = "OVERWRITE"
+  resolve_conflicts_on_update = "OVERWRITE"
+
+  tags = local.common_tags
+
+  depends_on = [aws_eks_node_group.default]
 }
 
 data "tls_certificate" "eks_oidc" {
