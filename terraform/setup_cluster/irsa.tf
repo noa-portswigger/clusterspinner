@@ -86,15 +86,15 @@ resource "aws_iam_role_policy" "cert_manager" {
         Resource = "*"
       },
       {
-        Sid    = "Route53GetChange"
-        Effect = "Allow"
-        Action = ["route53:GetChange"]
+        Sid      = "Route53GetChange"
+        Effect   = "Allow"
+        Action   = ["route53:GetChange"]
         Resource = "arn:${data.aws_partition.current.partition}:route53:::change/*"
       },
       {
-        Sid    = "Route53ModifyPlaygroundZone"
-        Effect = "Allow"
-        Action = ["route53:ChangeResourceRecordSets"]
+        Sid      = "Route53ModifyPlaygroundZone"
+        Effect   = "Allow"
+        Action   = ["route53:ChangeResourceRecordSets"]
         Resource = "arn:${data.aws_partition.current.partition}:route53:::hostedzone/${data.aws_route53_zone.parent_zone.zone_id}"
       }
     ]
