@@ -6,7 +6,10 @@ resource "helm_release" "argocd" {
   chart            = "argo-cd"
   version          = "9.5.4"
 
-  values = [file("${path.module}/argocd-values.yaml")]
+  values = [templatefile("${path.module}/argocd-values.yaml", {
+    cluster_name = var.cluster_name
+    zone_name    = var.zone_name
+  })]
 
   depends_on = [aws_eks_node_group.bootstrap]
 }
