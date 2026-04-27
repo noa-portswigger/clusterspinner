@@ -1,3 +1,5 @@
+ipam:
+  mode: eni
 eni:
   enabled: true
   nodeSpec:
@@ -18,3 +20,7 @@ hubble:
         noa.re/discover: enabled
       annotations:
         teleport.dev/name: hubble
+routingMode: native
+kubeProxyReplacement: true
+k8sServiceHost: {{k8s_service_host}}
+k8sServicePort: "443"

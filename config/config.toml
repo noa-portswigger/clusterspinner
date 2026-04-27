@@ -3,6 +3,7 @@ account_id = 658786808637
 cluster_name = "test0"
 domain_name = "aws.noa.re"
 aws_region = "eu-west-2"
+k8s_service_host = "2961CCEC6DA8CB74729DA4CC35C660FC.gr7.eu-west-2.eks.amazonaws.com"
 
 [[helm]]
 namespace = "teleport-cluster"
@@ -39,8 +40,8 @@ release = "karpenter"
 values = ["karpenter/values.yaml"]
 extra-resources = "karpenter/extra"
 
-#[[helm]]
-#namespace = "cilium"
-#release = "cilium"
-#values = ["cilium/values.yaml"]
-#extra-resources = "cilium/extra"
+[[helm]]
+namespace = "cilium"
+release = "cilium"
+values = ["cilium/values.yaml"]
+extra-resources = "cilium/extra"

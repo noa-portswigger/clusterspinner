@@ -1,0 +1,17 @@
+ipam:
+  mode: eni
+eni:
+  enabled: true
+  subnetTags:
+    karpenter.sh/discovery: ${cluster_name}
+egressMasqueradeInterfaces: eth+
+routingMode: native
+kubeProxyReplacement: true
+k8sServiceHost: ${k8s_service_host}
+k8sServicePort: "443"
+envoy:
+  enabled: false
+hubble:
+  tls:
+    auto:
+      enabled: false
