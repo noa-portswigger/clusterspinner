@@ -12,6 +12,7 @@ persistence:
   storageClassName: gp2
 operator:
   enabled: true
+proxyListenerMode: multiplex
 
 annotations:
   service:
