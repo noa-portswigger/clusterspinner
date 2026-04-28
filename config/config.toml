@@ -3,7 +3,7 @@ account_id = 658786808637
 cluster_name = "test0"
 domain_name = "aws.noa.re"
 aws_region = "eu-west-2"
-k8s_service_host = "2961CCEC6DA8CB74729DA4CC35C660FC.gr7.eu-west-2.eks.amazonaws.com"
+k8s_service_host = "058FE1E454B013230972F274A3EA3AA7.gr7.eu-west-2.eks.amazonaws.com"
 
 [[helm]]
 namespace = "teleport-cluster"
