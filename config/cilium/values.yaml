@@ -2,9 +2,9 @@ ipam:
   mode: eni
 eni:
   enabled: true
-  nodeSpec:
-    subnetTags:
-      - karpenter.sh/discovery={{cluster_name}}
+  awsEnablePrefixDelegation: true
+  subnetTags:
+    karpenter.sh/discovery: {{cluster_name}}
 hubble:
   tls:
     auto:
