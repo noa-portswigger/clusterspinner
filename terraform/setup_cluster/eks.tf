@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2026 The clusterspinner contributors
+# SPDX-License-Identifier: MIT
+
 resource "aws_security_group" "cluster" {
   name_prefix = "${var.cluster_name}-cluster-"
   description = "EKS control plane security group"

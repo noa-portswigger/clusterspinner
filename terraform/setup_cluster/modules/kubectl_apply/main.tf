@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2026 The clusterspinner contributors
+# SPDX-License-Identifier: MIT
+
 locals {
   apply_args = var.field_manager != "" ? "--server-side --field-manager=${var.field_manager} --force-conflicts" : ""
 

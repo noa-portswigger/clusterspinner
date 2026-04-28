@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2026 The clusterspinner contributors
+# SPDX-License-Identifier: MIT
+
 module "argocd_bootstrap" {
   source = "./modules/helm_apply"
 
