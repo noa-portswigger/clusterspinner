@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2026 The clusterspinner contributors
+# SPDX-License-Identifier: MIT
+
 apiVersion: karpenter.sh/v1
 kind: NodePool
 metadata:

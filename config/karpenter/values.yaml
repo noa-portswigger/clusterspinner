@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2026 The clusterspinner contributors
+# SPDX-License-Identifier: MIT
+
 # these values are borrowed from https://karpenter.sh/docs/getting-started/getting-started-with-karpenter/
 # with the requests and limits pushed down since we work with very small nodes
 settings:

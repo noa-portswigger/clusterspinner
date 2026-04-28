@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2026 The clusterspinner contributors
+# SPDX-License-Identifier: MIT
+
 repositories:
   - name: teleport
     url: https://charts.releases.teleport.dev

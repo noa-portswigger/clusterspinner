@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2026 The clusterspinner contributors
+# SPDX-License-Identifier: MIT
+
 locals {
   repo_flag = var.repository != "" ? "--repo ${var.repository}" : ""
 

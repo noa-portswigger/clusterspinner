@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2026 The clusterspinner contributors
+# SPDX-License-Identifier: MIT
+
 # SQS queue for interruption handling (spot, rebalance, health, state-change events)
 resource "aws_sqs_queue" "karpenter_interruption" {
   name                      = var.cluster_name

@@ -73,3 +73,7 @@ This is unfortunately not automated yet:
 * Invoke `kubectl -n teleport-cluster exec deploy/teleport-cluster-auth -- tctl users add $USER --roles=access,editor`
 * This should print a one-time link that you can use to set your password and 2-factor authentication.
 
+## License
+
+Released under the [MIT License](LICENSE). Source files carry SPDX headers (`SPDX-License-Identifier: MIT`).
+

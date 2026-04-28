@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2026 The clusterspinner contributors
+# SPDX-License-Identifier: MIT
+
 output "cluster_name" {
   description = "Name of the EKS cluster."
   value       = aws_eks_cluster.this.name

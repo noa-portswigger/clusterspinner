@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2026 The clusterspinner contributors
+# SPDX-License-Identifier: MIT
+
 variable "cluster_name" {
   type        = string
   description = "EKS cluster name, used for aws eks update-kubeconfig."
