@@ -13,6 +13,8 @@ repositories:
   - name: cilium
     url: quay.io/cilium/charts
     oci: true
+  - name: argo
+    url: https://argoproj.github.io/argo-helm
 
 releases:
   - name: teleport-cluster
@@ -42,3 +44,7 @@ releases:
   - name: cilium
     chart: cilium/cilium
     version: 1.19.3
+
+  - name: argocd
+    chart: argo/argo-cd
+    version: 9.5.4
