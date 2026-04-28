@@ -14,11 +14,12 @@ operator:
   enabled: true
 proxyListenerMode: multiplex
 
-annotations:
-  service:
-    external-dns.alpha.kubernetes.io/hostname: "*.{{cluster_name}}.{{domain_name}},{{cluster_name}}.{{domain_name}}"
-    service.beta.kubernetes.io/aws-load-balancer-scheme: internet-facing
-    service.beta.kubernetes.io/aws-load-balancer-healthcheck-protocol: HTTPS
-    service.beta.kubernetes.io/aws-load-balancer-healthcheck-path: /
-    service.beta.kubernetes.io/aws-load-balancer-type: external
-    service.beta.kubernetes.io/aws-load-balancer-nlb-target-type: ip
+proxy:
+  annotations:
+    service:
+      external-dns.alpha.kubernetes.io/hostname: "*.{{cluster_name}}.{{domain_name}},{{cluster_name}}.{{domain_name}}"
+      service.beta.kubernetes.io/aws-load-balancer-scheme: internet-facing
+      service.beta.kubernetes.io/aws-load-balancer-healthcheck-protocol: HTTPS
+      service.beta.kubernetes.io/aws-load-balancer-healthcheck-path: /
+      service.beta.kubernetes.io/aws-load-balancer-type: external
+      service.beta.kubernetes.io/aws-load-balancer-nlb-target-type: ip
