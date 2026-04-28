@@ -2,6 +2,7 @@ ipam:
   mode: eni
 eni:
   enabled: true
+  awsEnablePrefixDelegation: true
   subnetTags:
     karpenter.sh/discovery: ${cluster_name}
 egressMasqueradeInterfaces: eth+
@@ -13,5 +14,4 @@ envoy:
   enabled: false
 hubble:
   tls:
-    auto:
-      enabled: false
+    enabled: false

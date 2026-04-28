@@ -131,7 +131,7 @@ resource "aws_eks_node_group" "default" {
     aws_iam_role_policy_attachment.node_ecr,
     aws_iam_role_policy_attachment.node_ecr_pull,
     aws_iam_role_policy_attachment.node_ssm,
-    terraform_data.cilium_bootstrap,
+    module.cilium_bootstrap,
   ]
 
   tags = local.common_tags
