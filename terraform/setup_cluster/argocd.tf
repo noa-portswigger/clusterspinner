@@ -1,31 +1,33 @@
-resource "helm_release" "argocd" {
-  name             = "argocd"
-  namespace        = "argo"
-  create_namespace = true
-  repository       = "https://argoproj.github.io/argo-helm"
-  chart            = "argo-cd"
-  version          = "9.5.4"
+module "argocd_bootstrap" {
+  source = "./modules/helm_apply"
 
-  values = [templatefile("${path.module}/argocd-values.yaml", {
-    cluster_name = var.cluster_name
-    zone_name    = var.zone_name
-  })]
+  cluster_name     = var.cluster_name
+  region           = var.region
+  release_name     = "argocd"
+  namespace        = "argo"
+  chart            = "argo-cd"
+  repository       = "https://argoproj.github.io/argo-helm"
+  chart_version    = "9.5.4"
+  values           = file("${path.module}/argocd-values.yaml")
+  triggers_replace = aws_eks_cluster.this.id
 
   depends_on = [aws_eks_node_group.default, aws_eks_addon.coredns]
 }
 
-resource "terraform_data" "argocd_app" {
-  triggers_replace = sha256(templatefile("${path.module}/argo-app.yaml", { cluster_name = var.cluster_name, github_namespace = var.github_namespace }))
+locals {
+  argocd_app_manifest = templatefile("${path.module}/argo-app.yaml", {
+    cluster_name     = var.cluster_name
+    github_namespace = var.github_namespace
+  })
+}
 
-  provisioner "local-exec" {
-    interpreter = ["bash", "-c"]
-    command     = <<-EOT
-      aws eks update-kubeconfig --region ${var.region} --name ${var.cluster_name}
-      kubectl apply -f - <<'MANIFEST'
-      ${templatefile("${path.module}/argo-app.yaml", { cluster_name = var.cluster_name, github_namespace = var.github_namespace })}
-      MANIFEST
-    EOT
-  }
+module "argocd_app" {
+  source = "./modules/kubectl_apply"
 
-  depends_on = [helm_release.argocd]
+  cluster_name     = var.cluster_name
+  region           = var.region
+  manifest         = local.argocd_app_manifest
+  triggers_replace = sha256(local.argocd_app_manifest)
+
+  depends_on = [module.argocd_bootstrap]
 }
