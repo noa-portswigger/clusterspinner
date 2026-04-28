@@ -1,12 +1,11 @@
-global:
-  domain: argo.${cluster_name}.${zone_name}
-server:
-  service:
-    annotations:
-      teleport.dev/port: http
-      teleport.dev/name: argo
-    labels:
-      noa.re/discover: enabled
+crds:
+  install: true
 configs:
   params:
-    "server.insecure": true
+    server.insecure: true
+server:
+  enabled: false
+dex:
+  enabled: false
+notifications:
+  enabled: false
