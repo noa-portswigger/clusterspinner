@@ -45,3 +45,8 @@ namespace = "cilium"
 release = "cilium"
 values = ["cilium/values.yaml"]
 extra-resources = "cilium/extra"
+
+[[helm]]
+namespace = "argo"
+release = "argocd"
+values = ["argocd/values.yaml"]
