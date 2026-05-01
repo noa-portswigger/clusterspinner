@@ -1,0 +1,17 @@
+bind_address = "0.0.0.0:8080"
+key_source = "local"
+
+
+[authentication]
+audience = "idcat"
+issuer = "https://kubernetes.default.svc"
+
+[[github_app]]
+name = "SwigApp"
+app_id = 3543557
+secret_key = "swigapp"
+
+[[installation]]
+github_app = "SwigApp"
+required_claims = { "sub" = "system:serviceaccount:default:default" }
+

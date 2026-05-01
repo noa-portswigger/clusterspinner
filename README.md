@@ -63,8 +63,10 @@ The manifests are set up to bring up a Teleport cluster with endpoint that can b
 
 ### Delegate the domain
 
-If it has not been done previously, you need to set up This depends on how your parent dns Zone is set up. The 
-NS-records you need to add in the parent zone were printed when running the account level terraform setup.
+The with_admin_permissions terraform module will create a Route53 hosted zone for all the clusters that are
+brought up in this AWS account. Once the terraform run is complete, it will list some NS records that you need
+to add to the parent zone. Once created, the zone will be used to set up a Teleport public endpoint, named
+the same as the cluster that can be used to gain access.
 
 ### Grant yourself Teleport access.
 
