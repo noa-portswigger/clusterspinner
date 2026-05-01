@@ -3,7 +3,7 @@ key_source = "kms"
 
 [authentication]
 audience = "idcat"
-issuer = "https://kubernetes.default.svc"
+issuer = "https://oidc.eks.eu-west-2.amazonaws.com/id/058FE1E454B013230972F274A3EA3AA7"
 
 [[github_app]]
 name = "SwigApp"
