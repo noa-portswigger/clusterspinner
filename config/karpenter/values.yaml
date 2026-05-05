@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 # these values are borrowed from https://karpenter.sh/docs/getting-started/getting-started-with-karpenter/
-# with the requests and limits pushed down since we work with very small nodes
+# with the requests and limits pushed down since we work with very small nodes
 settings:
   clusterName: {{cluster_name}}
   interruptionQueue: {{cluster_name}}
