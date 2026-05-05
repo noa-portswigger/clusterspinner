@@ -57,5 +57,5 @@ values = ["argocd/values.yaml"]
 [[simple]]
 namespace = "idcat"
 image = "nresare/idcat:latest"
-iam_role = "arn:aws:iam::{{account_id}}:role/{{cluster_name}}-idcat"
+iam-role = "arn:aws:iam::{{account_id}}:role/{{cluster_name}}-idcat"
 config = {"/config/idcat.toml" = "idcat/idcat.toml"}
