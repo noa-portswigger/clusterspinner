@@ -34,7 +34,7 @@ releases:
 
   - name: cert-manager
     chart: jetstack/cert-manager
-    version: v1.19.1
+    version: v1.20.2
 
   - name: external-dns
     chart: external-dns/external-dns
