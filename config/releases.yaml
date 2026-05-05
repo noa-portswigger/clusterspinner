@@ -38,7 +38,7 @@ releases:
 
   - name: external-dns
     chart: external-dns/external-dns
-    version: 1.16.1
+    version: 1.21.1
 
   - name: karpenter
     chart: karpenter/karpenter
